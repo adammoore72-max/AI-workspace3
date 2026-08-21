@@ -1,4 +1,4 @@
-name: Final Static Sync
+name: Final Sync Fix
 on:
   workflow_dispatch:
 
@@ -11,27 +11,22 @@ jobs:
       - name: Checkout Your Repo
         uses: actions/checkout@v4
 
-      - name: Sync and Fix Folders
+      - name: Sync and Move
         run: |
-          # 1. Clone official repo to a temp folder
-          git clone --depth 1 https://github.com/TypingMind/typingmind.git temp_official
+          # 1. Clone official repo to a sibling folder
+          git clone --depth 1 https://github.com/TypingMind/typingmind.git ../official
           
-          # 2. Delete the 'crap' on your main branch (except .github)
+          # 2. Delete the 'src' and 'package.json' crap in your current folder
+          # Leaves the .github folder alone
           find . -maxdepth 1 ! -name '.github' ! -name '.' ! -name '..' -exec rm -rf {} +
           
-          # 3. Move official files to your root. 
-          # If they are inside a 'src' folder, move them out.
-          if [ -d "temp_official/src" ]; then
-            cp -rv temp_official/src/* .
-          else
-            cp -rv temp_official/* .
-          fi
-          rm -rf temp_official
-
+          # 3. Copy official compiled app files from their 'src' folder to your root
+          cp -rp ../official/src/. .
+          
       - name: Push to Main
         run: |
           git config --global user.name "Sync-Bot"
           git config --global user.email "bot@typingmind.com"
           git add .
-          git commit -m "Fixed: Moved static files to root" || exit 0
+          git commit -m "Fixed: Compiled app moved to root" || exit 0
           git push origin main --force
