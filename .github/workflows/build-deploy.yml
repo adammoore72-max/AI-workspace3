@@ -1,0 +1,33 @@
+name: Build and Deploy UI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Official Source
+        uses: actions/checkout@v4
+        with:
+          repository: TypingMind/typingmind
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Static Site
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy Compiled Files to Main
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: out # This is where the compiled website lives
+          branch: main
+          clean: false # This prevents deleting your .github folder
+          
