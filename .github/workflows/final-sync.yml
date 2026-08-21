@@ -1,0 +1,37 @@
+name: Final Static Sync
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Your Repo
+        uses: actions/checkout@v4
+
+      - name: Sync and Fix Folders
+        run: |
+          # 1. Clone official repo to a temp folder
+          git clone --depth 1 https://github.com/TypingMind/typingmind.git temp_official
+          
+          # 2. Delete the 'crap' on your main branch (except .github)
+          find . -maxdepth 1 ! -name '.github' ! -name '.' ! -name '..' -exec rm -rf {} +
+          
+          # 3. Move official files to your root. 
+          # If they are inside a 'src' folder, move them out.
+          if [ -d "temp_official/src" ]; then
+            cp -rv temp_official/src/* .
+          else
+            cp -rv temp_official/* .
+          fi
+          rm -rf temp_official
+
+      - name: Push to Main
+        run: |
+          git config --global user.name "Sync-Bot"
+          git config --global user.email "bot@typingmind.com"
+          git add .
+          git commit -m "Fixed: Moved static files to root" || exit 0
+          git push origin main --force
