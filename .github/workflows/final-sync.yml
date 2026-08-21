@@ -10,23 +10,25 @@ jobs:
     steps:
       - name: Checkout Your Repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Sync and Move
         run: |
-          # 1. Clone official repo to a sibling folder
+          # 1. Clone official repo outside of your current directory
           git clone --depth 1 https://github.com/TypingMind/typingmind.git ../official
           
-          # 2. Delete the 'src' and 'package.json' crap in your current folder
-          # Leaves the .github folder alone
-          find . -maxdepth 1 ! -name '.github' ! -name '.' ! -name '..' -exec rm -rf {} +
+          # 2. Delete the 'src' and 'package.json' crap
+          # CRITICAL: Preserve .git and .github folders
+          find . -maxdepth 1 ! -name '.git' ! -name '.github' ! -name '.' ! -name '..' -exec rm -rf {} +
           
-          # 3. Copy official compiled app files from their 'src' folder to your root
+          # 3. Copy official compiled app files to your root
           cp -rp ../official/src/. .
           
       - name: Push to Main
         run: |
           git config --global user.name "Sync-Bot"
           git config --global user.email "bot@typingmind.com"
-          git add .
-          git commit -m "Fixed: Compiled app moved to root" || exit 0
+          git add -A
+          git commit -m "Fixed: Compiled app moved to root while preserving git identity" || exit 0
           git push origin main --force
